@@ -3,6 +3,7 @@
 import hashlib
 import json
 import sys
+import time
 from collections import defaultdict
 
 import torch
@@ -13,6 +14,20 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 DATASET_REVISION = "c30699e8356da336a370243923dbaf21066bb9fe"
 LETTERS = "ABCD"
 BATCH_SIZE = 16
+
+
+def _require_cuda() -> torch.device:
+    for attempt in range(6):
+        try:
+            torch.ones(1, device="cuda")
+        except (AssertionError, RuntimeError) as error:
+            if attempt == 5:
+                raise RuntimeError("H200 CUDA did not become available") from error
+            print(f"[lab2 sample] CUDA not ready; retry {attempt + 1}/5", flush=True)
+            time.sleep(5)
+        else:
+            return torch.device("cuda")
+    raise AssertionError("unreachable")
 
 
 def _question_key(index: int, row: dict) -> str:
@@ -62,9 +77,10 @@ def mmlu_eval() -> dict[str, str]:
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "left"
     tokenizer.truncation_side = "left"
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    dtype = torch.float16 if device.type == "cuda" else torch.float32
-    model = AutoModelForCausalLM.from_pretrained("openai-community/gpt2", dtype=dtype)
+    device = _require_cuda()
+    model = AutoModelForCausalLM.from_pretrained(
+        "openai-community/gpt2", dtype=torch.float16
+    )
     torch.nn.Module.to(model, device=device)
     model.eval()
     token_ids = [

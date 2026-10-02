@@ -3,4 +3,6 @@
 Replace this with your model's Hugging Face ID for a real submission.
 """
 
-eval_model_id = "burnedinthesky/gpt2-c4-muon-lr2.5e-3-475843"
+eval_model_id = (
+    "burnedinthesky/Llama-gpt2-llama32-ot-muon-lr4e-3-tok401k-seq1024-cos-wu5-485220"
+)

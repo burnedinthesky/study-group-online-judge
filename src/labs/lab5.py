@@ -3,4 +3,4 @@
 Replace this with your model's Hugging Face ID for a real submission.
 """
 
-eval_model_id = ""
+eval_model_id = "meta-llama/Llama-3.2-1B"
